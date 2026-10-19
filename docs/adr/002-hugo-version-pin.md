@@ -3,6 +3,9 @@
 Status: accepted, **with one claim from the original note corrected**
 Date: 2026-10-19
 
+The same incorrect claim also lived in `hugo.toml` (since the v2 merge); it is
+corrected alongside ADR-004.
+
 ## Context
 
 The deploy workflow installs an explicitly pinned Hugo. `main` pins `0.168.0`.
