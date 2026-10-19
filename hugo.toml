@@ -49,6 +49,12 @@ summaryLength = 0
   name = 'Jane Sample'
   headline = 'Sample Site — placeholder content only'
 
+# sample persona links — all fictitious placeholders
+[[params.author.links]]
+  github = "https://github.com/jane-sample"
+[[params.author.links]]
+  email = "you@example.com"
+
 [menu]
   [[menu.main]]
     name = 'Home'
