@@ -52,6 +52,29 @@ jobs:
       - name: Build site
         run: hugo --gc --minify --panicOnWarning --baseURL "${{ steps.pages.outputs.base_url }}/"
 
+      # Source-content audits run BEFORE Chrome is downloaded: `grep -r .` would
+      # otherwise read Chromium binaries and report their embedded addresses.
+      - name: Content hygiene — emails must be example-domain placeholders
+        run: |
+          # mapfile takes the array as a positional arg (`-a` is not a valid
+          # option and aborts the step), and `-t` is required: without it each
+          # element keeps its trailing newline, so the *@example.com glob below
+          # never matches and the step fails on valid sample addresses.
+          mapfile -t MAIL < <(grep -rhoIE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' \
+            --exclude-dir=.git --exclude-dir=themes --exclude-dir=public --exclude-dir=resources \
+            --exclude-dir=.chrome --exclude="*.zip" . | sort -u)
+          for m in "${MAIL[@]}"; do
+            [[ "$m" == *@example.com ]] || { echo "FAIL: non-sample email: $m"; exit 1; }
+          done
+          echo "email allowlist OK (${#MAIL[@]} distinct, all @example.com)"
+
+      - name: Content hygiene — no phone-like patterns
+        run: |
+          grep -rI -E '\+[0-9]{2,3}-?[0-9]{6,}' \
+            --exclude-dir=.git --exclude-dir=themes --exclude-dir=public --exclude-dir=resources \
+            --exclude-dir=.chrome --exclude="*.zip" . \
+            && { echo "FAIL: phone-like pattern found"; exit 1; } || true
+
       - name: Install Chrome for Testing (pinned)
         run: |
           curl -sLo chrome.zip "https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chrome-linux64.zip"
@@ -76,23 +99,6 @@ jobs:
             "http://127.0.0.1:8099/nster/cv/index.html"
           kill $SRV || true
           test -s public/cv.pdf
-
-      - name: Content hygiene — emails must be example-domain placeholders
-        run: |
-          # mapfile takes the array as a positional arg; `-a` is not a valid
-          # mapfile option and aborts the step under Actions' `-eo pipefail`.
-          mapfile MAIL < <(grep -rhoE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' \
-            --exclude-dir=.git --exclude-dir=themes --exclude-dir=public --exclude-dir=resources . | sort -u)
-          for m in "${MAIL[@]}"; do
-            [[ "$m" == *@example.com ]] || { echo "FAIL: non-sample email: $m"; exit 1; }
-          done
-          echo "email allowlist OK (${#MAIL[@]} distinct, all @example.com)"
-
-      - name: Content hygiene — no phone-like patterns
-        run: |
-          grep -rE '\+[0-9]{2,3}-?[0-9]{6,}' \
-            --exclude-dir=.git --exclude-dir=themes --exclude-dir=public --exclude-dir=resources . \
-            && { echo "FAIL: phone-like pattern found"; exit 1; } || true
 
       - name: PDF text audit — placeholders only
         run: |
