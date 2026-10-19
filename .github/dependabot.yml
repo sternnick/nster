@@ -1,0 +1,18 @@
+version: 2
+updates:
+  # The workflow now pins actions by commit SHA; Dependabot keeps those SHAs
+  # fresh for the pinned major (the "# vN.N.N" comment in hugo.yaml is what
+  # tells it which major) and opens one PR per bump instead of letting the pin
+  # rot silently.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
+  # The theme is a submodule pinned to an exact tag (ADR-001), so a bump is a
+  # reviewable commit — this is the mechanism that makes "bump deliberately"
+  # actually happen rather than being a good intention.
+  - package-ecosystem: submodules
+    directory: /
+    schedule:
+      interval: weekly
