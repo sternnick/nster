@@ -34,9 +34,12 @@ attributable, reviewable, and not part of the product surface.
 
 - The CI content-hygiene gate **keeps no identifier deny-list** (its own comment
   says so, and hardcoding one into a public repo publishes the very list an
-  attacker wants). Detection of this class therefore stays **out-of-band**, in
-  the maintainer audit patterns — which now include bare agent/handle names, not
-  just domain-shaped strings.
+  attacker wants). Detection of this class therefore stays **out-of-band** — and
+  out-of-band currently means **ad hoc**: today's audits were grep patterns
+  assembled by hand inside a session, and there is no maintained pattern file in
+  the tooling. Until such a set exists and is versioned somewhere durable,
+  nothing structurally catches a bare agent handle; it depends on whoever runs
+  the audit remembering to include one. That is an open action, not a control.
 - An authored-by line in generated prose is treated as a review defect, not a
   style nit: it is removed before merge, not after.
 - The four-hour window is the reason this is an ADR and not just a reverted line:

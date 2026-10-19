@@ -8,8 +8,10 @@ corrected alongside ADR-004.
 
 ## Context
 
-The deploy workflow installs an explicitly pinned Hugo. `main` pins `0.168.0`.
-The v2 branch pins `0.167.0`. A comment left in the workflow stated the reason as
+The deploy workflow installs an explicitly pinned Hugo. When this decision was
+taken, `main` pinned `0.168.0` and the v2 branch pinned `0.167.0`; since the v2
+merge (`051a4d7`) main carries `0.167.0` too, so the two pins are one value. A
+comment left in the workflow stated the reason as
 *"blowfish v3.9.0 declares hugoVersion max=0.167.0 and hard-fails the build on
 0.168.0 (verified 2026-10-19)"*.
 
@@ -23,6 +25,11 @@ unverified rather than repeated as fact:
 - Blowfish's own `hugo-version-update.yml` workflow pulls
   `gohugoio/hugo/releases/latest` and opens a PR to bump its config, i.e. the
   upstream policy is "track latest", not "cap at 0.167".
+- Upstream does advertise a **minimum**: the `v3.9.0` README carries a
+  `min-HUGO-version 0.162.0` badge. That is prose in a badge, not a constraint
+  Hugo reads, so it does not change the analysis above — but it is where
+  `README.md`'s "`>= 0.162.0`" comes from, and it is a real citation, not an
+  invention.
 
 ## Decision
 
