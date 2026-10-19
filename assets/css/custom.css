@@ -1,0 +1,14 @@
+/* Print rules for the sample site (Blowfish ships none).
+   Goal: a clean A4 print/PDF of the CV page from the browser. */
+@media print {
+  header, nav, footer, .menu, #menu, #mobile-menu-dialog, .print-hidden, button { display: none !important; }
+  .fixed, .absolute { position: static !important; }
+  [role="dialog"] { display: none !important; }
+  body { background: #fff !important; color: #000 !important; font-size: 11pt; height: auto !important; overflow: visible !important; }
+  html { height: auto !important; }
+  main, article { max-width: 100% !important; width: auto !important; margin: 0 !important; padding: 0 !important; }
+  a { color: #000 !important; text-decoration: none !important; }
+  a[href^="http"]::after { content: ""; }
+  h1 { font-size: 20pt; } h2 { font-size: 14pt; } h3 { font-size: 12pt; }
+  @page { size: A4; margin: 18mm 16mm; }
+}

@@ -1,14 +1,23 @@
 name: Build and deploy
 
 env:
-  DART_SASS_VERSION: 1.105.1
-  GO_VERSION: 1.24.6
-  HUGO_VERSION: 0.168.0   # PINNED: Hugo docs pin their own; theme may require >=0.164
-  NODE_VERSION: 24.21.0
+  # Pinned to the version this site is proven to build with (run 39285257717,
+  # "Build site" green). An earlier note here attributed the pin to a
+  # theme-declared hugoVersion max; that is NOT verifiable in the theme at
+  # v3.9.0 — theme.toml has no [hugoVersion] block and config/_default/
+  # module.toml is an empty blob — and Blowfish's own bot tracks Hugo's
+  # latest release. So treat 0.167.0 as "proven", not 0.168.0 as "known bad".
+  # See docs/adr/002-hugo-version-pin.md.
+  HUGO_VERSION: 0.167.0
+  # Chrome for Testing Stable channel at pin time (last-known-good-versions.json,
+  # re-verified 2026-10-19T15:30Z)
+  CHROME_VERSION: 155.0.8059.84
   TZ: Europe/Dublin
 
 on:
   push:
+    branches: [main]
+  pull_request:
     branches: [main]
   workflow_dispatch:
 
@@ -46,7 +55,83 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Build site
-        run: hugo --gc --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
+        run: hugo --gc --minify --panicOnWarning --baseURL "${{ steps.pages.outputs.base_url }}/"
+
+      # --- Why the audits run here, and not after Chrome -----------------
+      # `grep -r .` walks the whole workspace. Once Chrome for Testing has been
+      # downloaded, .chrome/ (~300 MB of stripped binaries) and chrome.zip are
+      # in that walk, and their embedded ASCII addresses look like real contact
+      # details to the allowlist below. Keeping the source audits ahead of the
+      # download means they only ever read tracked content, and the binary
+      # exclusions on the greps are the second line of defense, not the first.
+      # (Run 39285257717 failed exactly here with the audits placed after the
+      # install — the same run also proved the `mapfile -t` fix below is the
+      # deterministic part.)
+      - name: Content hygiene — emails must be example-domain placeholders
+        run: |
+          # mapfile takes the array as a positional arg (`-a` is not a valid
+          # option and aborts the step), and `-t` is required: without it each
+          # element keeps its trailing newline, so the *@example.com glob below
+          # never matches and the step fails on valid sample addresses.
+          mapfile -t MAIL < <(grep -rhoIE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' \
+            --exclude-dir=.git --exclude-dir=themes --exclude-dir=public --exclude-dir=resources \
+            --exclude-dir=.chrome --exclude="*.zip" . | sort -u)
+          for m in "${MAIL[@]}"; do
+            [[ "$m" == *@example.com ]] || { echo "FAIL: non-sample email: $m"; exit 1; }
+          done
+          echo "email allowlist OK (${#MAIL[@]} distinct, all @example.com)"
+
+      - name: Content hygiene — no phone-like patterns
+        run: |
+          grep -rI -E '\+[0-9]{2,3}-?[0-9]{6,}' \
+            --exclude-dir=.git --exclude-dir=themes --exclude-dir=public --exclude-dir=resources \
+            --exclude-dir=.chrome --exclude="*.zip" . \
+            && { echo "FAIL: phone-like pattern found"; exit 1; } || true
+
+      - name: Install Chrome for Testing (pinned)
+        run: |
+          curl -sLo chrome.zip "https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chrome-linux64.zip"
+          unzip -q chrome.zip -d .chrome
+
+      - name: Render CV PDF from the built site
+        # Serve the build under the site's sub-path so absolute /nster/ asset
+        # URLs resolve (file:// would resolve them to filesystem root).
+        run: |
+          mkdir -p "$RUNNER_TEMP/site"
+          ln -s "$GITHUB_WORKSPACE/public" "$RUNNER_TEMP/site/nster"
+          python3 -m http.server 8099 --bind 127.0.0.1 --directory "$RUNNER_TEMP/site" &
+          SRV=$!
+          for i in $(seq 1 20); do
+            curl -fso /dev/null "http://127.0.0.1:8099/nster/cv/index.html" && break
+            sleep 0.5
+          done
+          .chrome/chrome-linux64/chrome \
+            --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage \
+            --print-to-pdf="$GITHUB_WORKSPACE/public/cv.pdf" --no-pdf-header-footer \
+            --virtual-time-budget=8000 \
+            "http://127.0.0.1:8099/nster/cv/index.html"
+          kill $SRV || true
+          test -s public/cv.pdf
+
+      # --- Why this audit runs AFTER "Render CV PDF", not with the others ---
+      # It reads public/cv.pdf, which only exists once Chrome has rendered it;
+      # moved up it fails with FileNotFoundError before checking anything. Its
+      # input is a single PDF, not a directory walk, so the Chrome-binary
+      # concern above does not apply here.
+      - name: PDF text audit — placeholders only
+        run: |
+          pip install --quiet pypdf
+          python3 - <<'EOF'
+          import re, sys
+          from pypdf import PdfReader
+          text = "".join((p.extract_text() or "") for p in PdfReader("public/cv.pdf").pages)
+          phones = re.findall(r"\+\d{2,3}-?\d{6,}", text)
+          mails = set(re.findall(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", text))
+          if phones or (mails - {"you@example.com"}):
+              print("FAIL:", phones, mails); sys.exit(1)
+          assert "Sample" in text, "unexpected PDF text"
+          print("PDF text audit OK (placeholder content only)")
+          EOF
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
@@ -54,6 +139,13 @@ jobs:
           path: ./public
 
   deploy:
+    # --- Why the guard ----------------------------------------------------
+    # This workflow now runs on pull_request too, so it must say explicitly which
+    # half of itself is allowed to touch the live site: a PR verifies (build
+    # + audits + PDF), a merge to main deploys. Without this line every PR run
+    # would publish its branch to https://sternnick.github.io/nster/ . Verified
+    # in run 39285257717: deploy reported "skipped" on the pull_request event.
+    if: github.event_name != 'pull_request'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
