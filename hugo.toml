@@ -34,6 +34,10 @@ summaryLength = 0
   # sample phase: keep the placeholder site out of search engines
   robots = 'noindex, nofollow'
 
+  # OG/Twitter share image (sample placeholder). Theme emits og:image from
+  # this when a page has no featured/cover image (head.html, v3.9.0).
+  defaultSocialImage = 'img/og-sample.png'
+
   [params.homepage]
     layout = 'page'
     showRecent = false
