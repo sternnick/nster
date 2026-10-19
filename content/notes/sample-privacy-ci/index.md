@@ -6,7 +6,8 @@ description: "Sample note: automated content screening for public repositories (
 tags: ["sample", "security", "ci"]
 ---
 
-> **Sample note.** Fictitious placeholder writing. No real incident, person,
+> [!NOTE]
+> Fictitious placeholder writing. No real incident, person,
 > or repository is described.
 
 Public repositories have a particular hazard: they accumulate. A forgotten

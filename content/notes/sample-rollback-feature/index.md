@@ -6,7 +6,8 @@ description: "Sample note: designing reversible decisions (fictitious content)."
 tags: ["sample", "process", "reliability"]
 ---
 
-> **Sample note.** Fictitious placeholder writing for the demo persona. The
+> [!NOTE]
+> Fictitious placeholder writing for the demo persona. The
 > "team", "system", and every number below are invented.
 
 Every team believes it wants speed. Fewer teams want the thing that actually

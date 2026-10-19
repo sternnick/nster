@@ -6,7 +6,8 @@ description: "Sample note: static generation vs hosted resume builders (fictitio
 tags: ["sample", "static-sites", "hugo"]
 ---
 
-> **Sample note.** This is fictitious placeholder writing for a demo persona
+> [!NOTE]
+> This is fictitious placeholder writing for a demo persona
 > ("Jane Sample"). Nothing here describes a real person, employer, or product.
 
 A CV is a document that happens to live on the web — it does not need a server,
