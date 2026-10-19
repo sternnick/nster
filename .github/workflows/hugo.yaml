@@ -27,8 +27,12 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  # One shared group used to serialise every run of this workflow, so a PR check
+  # could sit behind a production deploy (and vice versa). Scoping by ref keeps
+  # them independent: superseded PR runs cancel, a main push is never cancelled
+  # mid-deploy.
+  group: pages-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 defaults:
   run:
@@ -36,12 +40,17 @@ defaults:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # ubuntu-24.04 rather than ubuntu-latest: the latest label migrates to
+    # Ubuntu 26 on 2026-10-19, and a deploy pipeline should not move under
+    # itself. timeout-minutes so a hung step fails the run instead of burning
+    # the whole runner window.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     env:
       HUGO_ENVIRONMENT: production
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           submodules: recursive   # theme as git submodule
           fetch-depth: 0
@@ -52,7 +61,7 @@ jobs:
 
       - name: Setup Pages
         id: pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
 
       - name: Build site
         run: hugo --gc --minify --panicOnWarning --baseURL "${{ steps.pages.outputs.base_url }}/"
@@ -172,7 +181,7 @@ jobs:
           EOF
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:
           path: ./public
 
@@ -187,9 +196,10 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
