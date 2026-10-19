@@ -1,8 +1,13 @@
 name: Build and deploy
 
 env:
-  # HUGO 0.168.0 was planned; blowfish v3.9.0 declares hugoVersion max=0.167.0
-  # and hard-fails the build on 0.168.0 (verified 2026-10-19), so the pin is 0.167.0.
+  # Pinned to the version this site is proven to build with (run 39285257717,
+  # "Build site" green). An earlier note here attributed the pin to a
+  # theme-declared hugoVersion max; that is NOT verifiable in the theme at
+  # v3.9.0 — theme.toml has no [hugoVersion] block and config/_default/
+  # module.toml is an empty blob — and Blowfish's own bot tracks Hugo's
+  # latest release. So treat 0.167.0 as "proven", not 0.168.0 as "known bad".
+  # See docs/adr/002-hugo-version-pin.md.
   HUGO_VERSION: 0.167.0
   # Chrome for Testing Stable channel at pin time (last-known-good-versions.json,
   # re-verified 2026-10-19T15:30Z)
@@ -52,8 +57,16 @@ jobs:
       - name: Build site
         run: hugo --gc --minify --panicOnWarning --baseURL "${{ steps.pages.outputs.base_url }}/"
 
-      # Source-content audits run BEFORE Chrome is downloaded: `grep -r .` would
-      # otherwise read Chromium binaries and report their embedded addresses.
+      # --- Why the audits run here, and not after Chrome -----------------
+      # `grep -r .` walks the whole workspace. Once Chrome for Testing has been
+      # downloaded, .chrome/ (~300 MB of stripped binaries) and chrome.zip are
+      # in that walk, and their embedded ASCII addresses look like real contact
+      # details to the allowlist below. Keeping the source audits ahead of the
+      # download means they only ever read tracked content, and the binary
+      # exclusions on the greps are the second line of defense, not the first.
+      # (Run 39285257717 failed exactly here with the audits placed after the
+      # install — the same run also proved the `mapfile -t` fix below is the
+      # deterministic part.)
       - name: Content hygiene — emails must be example-domain placeholders
         run: |
           # mapfile takes the array as a positional arg (`-a` is not a valid
@@ -100,6 +113,11 @@ jobs:
           kill $SRV || true
           test -s public/cv.pdf
 
+      # --- Why this audit runs AFTER "Render CV PDF", not with the others ---
+      # It reads public/cv.pdf, which only exists once Chrome has rendered it;
+      # moved up it fails with FileNotFoundError before checking anything. Its
+      # input is a single PDF, not a directory walk, so the Chrome-binary
+      # concern above does not apply here.
       - name: PDF text audit — placeholders only
         run: |
           pip install --quiet pypdf
@@ -121,7 +139,12 @@ jobs:
           path: ./public
 
   deploy:
-    # A pull request must never deploy: PR = verify, merge = deploy.
+    # --- Why the guard ----------------------------------------------------
+    # This workflow now runs on pull_request too, so it must say explicitly which
+    # half of itself is allowed to touch the live site: a PR verifies (build
+    # + audits + PDF), a merge to main deploys. Without this line every PR run
+    # would publish its branch to https://sternnick.github.io/nster/ . Verified
+    # in run 39285257717: deploy reported "skipped" on the pull_request event.
     if: github.event_name != 'pull_request'
     environment:
       name: github-pages
