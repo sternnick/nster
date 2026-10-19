@@ -17,7 +17,7 @@ nobody intended it to be part of.
 
 **Why the audit missed it.** The identifier patterns we run are
 address/domain/key-shaped (`…@sterniotis.com`, phone shapes, `BEGIN … PRIVATE
-KEY`, `ghp_…`). The bare handle `cp-hermes-01` on its own matches none of them.
+KEY`, `ghp_…`). A bare agent handle, on its own, matches none of them.
 The same class of miss applies to any internal username, hostname, or agent name
 written without a domain attached.
 
