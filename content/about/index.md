@@ -19,3 +19,4 @@ This site is a static Hugo website hosted on GitHub Pages.
 - **Print**: the CV page is styled for printing directly from the browser.
 
 The current content is placeholder samples only.
+Contact: test.person@reserved.test or +353-123456789
