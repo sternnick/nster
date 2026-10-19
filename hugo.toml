@@ -1,7 +1,8 @@
 # Hugo site configuration — nster (sample site, multi-page)
 # NOTE: this site contains PLACEHOLDER SAMPLE CONTENT only.
 # Theme: blowfish v3.9.0 (git submodule at exact tag). Requires Hugo extended;
-# workflow pins 0.168.0 (theme minimum is 0.162.0).
+# workflow pins 0.167.0 (theme minimum is 0.162.0; Blowfish v3.9.0 declares
+# hugoVersion max = 0.167.0).
 
 baseURL = 'https://sternnick.github.io/nster/'
 title = 'Jane Sample — Sample Site'
