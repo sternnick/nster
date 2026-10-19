@@ -12,6 +12,8 @@ env:
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -75,12 +77,46 @@ jobs:
           kill $SRV || true
           test -s public/cv.pdf
 
+      - name: Content hygiene — emails must be example-domain placeholders
+        run: |
+          # mapfile takes the array as a positional arg; `-a` is not a valid
+          # mapfile option and aborts the step under Actions' `-eo pipefail`.
+          mapfile MAIL < <(grep -rhoE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' \
+            --exclude-dir=.git --exclude-dir=themes --exclude-dir=public --exclude-dir=resources . | sort -u)
+          for m in "${MAIL[@]}"; do
+            [[ "$m" == *@example.com ]] || { echo "FAIL: non-sample email: $m"; exit 1; }
+          done
+          echo "email allowlist OK (${#MAIL[@]} distinct, all @example.com)"
+
+      - name: Content hygiene — no phone-like patterns
+        run: |
+          grep -rE '\+[0-9]{2,3}-?[0-9]{6,}' \
+            --exclude-dir=.git --exclude-dir=themes --exclude-dir=public --exclude-dir=resources . \
+            && { echo "FAIL: phone-like pattern found"; exit 1; } || true
+
+      - name: PDF text audit — placeholders only
+        run: |
+          pip install --quiet pypdf
+          python3 - <<'EOF'
+          import re, sys
+          from pypdf import PdfReader
+          text = "".join((p.extract_text() or "") for p in PdfReader("public/cv.pdf").pages)
+          phones = re.findall(r"\+\d{2,3}-?\d{6,}", text)
+          mails = set(re.findall(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", text))
+          if phones or (mails - {"you@example.com"}):
+              print("FAIL:", phones, mails); sys.exit(1)
+          assert "Sample" in text, "unexpected PDF text"
+          print("PDF text audit OK (placeholder content only)")
+          EOF
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./public
 
   deploy:
+    # A pull request must never deploy: PR = verify, merge = deploy.
+    if: github.event_name != 'pull_request'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
