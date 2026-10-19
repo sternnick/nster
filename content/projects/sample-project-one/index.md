@@ -41,6 +41,8 @@ never cleverness, it was that anyone could open the report and stop arguing.
 
 ## Fictitious outcome
 
+{{< figure src="/img/sample-architecture.jpg" alt="Invented four-box architecture diagram of the fictitious pipeline: Sample Source, Sample API, Sample Store, Sample Cache, annotated with RFC 5737 documentation IPs" caption="The fictitious system's made-up topology. The IP addresses are RFC 5737 documentation examples — they route nowhere." >}}
+
 | Month (fake) | Incident count (fake) |
 |---|---|
 | M1 | 41 |
