@@ -12,3 +12,78 @@
   h1 { font-size: 20pt; } h2 { font-size: 14pt; } h3 { font-size: 12pt; }
   @page { size: A4; margin: 18mm 16mm; }
 }
+
+/* ---------------------------------------------------------------
+   Professional polish — Iteration 1 (sample site)
+   Loaded by Blowfish AFTER all theme styles (see blowfish.page/docs/
+   advanced-customisation), so these overrides win without touching
+   the theme submodule. Colours use the theme's own RGB channel
+   variables so light/dark appearance keeps working.
+   --------------------------------------------------------------- */
+
+/* Deeper, calmer accent: replace the default sky blue with a
+   slate-navy that reads better in a CV/professional context. */
+:root {
+  --color-primary-50:  240, 244, 255;
+  --color-primary-100: 224, 231, 255;
+  --color-primary-200: 199, 210, 254;
+  --color-primary-300: 165, 180, 252;
+  --color-primary-400: 129, 140, 248;
+  --color-primary-500: 99, 102, 241;
+  --color-primary-600: 79, 70, 229;
+  --color-primary-700: 67, 56, 202;
+  --color-primary-800: 55, 48, 163;
+  --color-primary-900: 49, 46, 129;
+}
+
+/* Slightly larger base — Blowfish scales everything from html
+   font-size (Tailwind default is 12pt). */
+html {
+  font-size: 12.5pt;
+}
+
+/* Headings: tighter tracking, a touch more weight contrast. */
+h1, h2, h3, h4 {
+  letter-spacing: -0.015em;
+  font-weight: 700;
+}
+
+/* Body copy: comfortable measure and rhythm for prose pages. */
+.prose :where(p):not(:where([class~="not-prose"] *)) {
+  line-height: 1.75;
+  margin-top: 1.1em;
+  margin-bottom: 1.1em;
+}
+
+/* Links in article text: subtle underline, accent on hover. */
+.prose :where(a):not(:where([class~="not-prose"] *)) {
+  text-decoration: none;
+  border-bottom: 1px solid rgb(var(--color-primary-300) / 0.45);
+  transition: border-color 120ms ease-in-out, color 120ms ease-in-out;
+}
+.prose :where(a):not(:where([class~="not-prose"] *)):hover {
+  border-bottom-color: rgb(var(--color-primary-600));
+}
+
+/* Homepage cards / article listings (article-link--simple in
+   themes/blowfish/layouts/partials/article-link/): subtle hover lift. */
+.article-link--simple {
+  border-radius: 0.75rem;
+  transition: background-color 120ms ease-in-out;
+}
+.article-link--simple:hover {
+  background-color: rgb(var(--color-neutral-50));
+}
+html.dark .article-link--simple:hover {
+  background-color: rgb(var(--color-neutral-800) / 0.5);
+}
+
+/* Code blocks: rounded corners to match the card language. */
+.highlight > pre, pre.chroma {
+  border-radius: 0.5rem;
+}
+
+/* Footer (#site-footer): more breathing room from content. */
+#site-footer {
+  margin-top: 3rem;
+}
