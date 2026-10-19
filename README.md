@@ -11,10 +11,17 @@ separate owner approval.
 - Hugo: pinned `0.167.0` extended in CI (Blowfish v3.9.0 declares
   `hugoVersion max = 0.167.0`; verified at pin time).
 - PDF: `.github/workflows/hugo.yaml` renders `public/cv.pdf` from the built CV
-  page with pinned Chrome for Testing and publishes it at `/nster/cv.pdf`.
+  page with pinned Chrome for Testing (`CHROME_VERSION`, see workflow env) and
+  publishes it at `/nster/cv.pdf`.
   The PDF is a build artifact — never committed to git.
-- CI: `.github/workflows/hugo.yaml` (build + deploy) and `pr-gate.yml`
-  (strict build, privacy gate, PDF text audit).
+- Styling: theme defaults plus project-side overrides in
+  `assets/css/custom.css` (loaded after all theme CSS — print/PDF rules live
+  there; never edit the submodule).
+- CI: `.github/workflows/hugo.yaml` — one workflow, staged: strict build
+  (`--panicOnWarning`), content hygiene audits (email allowlist, phone-like
+  pattern scan), pinned Chrome for Testing PDF render, PDF text audit, then
+  deploy. All audits run BEFORE the Chrome download so binary artifacts can
+  never trip the greps.
 - Config: `hugo.toml`, `baseURL = https://sternnick.github.io/nster/`
 - Content lives in `content/` as markdown page bundles:
 
