@@ -50,5 +50,3 @@ git add themes/blowfish
 Pages source = GitHub Actions (set once in Settings → Pages). The deploy job
 publishes via `actions/deploy-pages`. Rollback: revert the merge commit; the
 build-gated pipeline redeploys the previous state.
-
-— cp-hermes-01 · 2026-10-19T15:55Z
