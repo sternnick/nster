@@ -1,7 +1,7 @@
 # Hugo site configuration — nster (sample site, multi-page)
 # NOTE: this site contains PLACEHOLDER SAMPLE CONTENT only.
 # Theme: blowfish v3.9.0 (git submodule at exact tag). Requires Hugo extended;
-# workflow pins 0.168.0 (theme minimum is 0.162.0).
+# the CI workflow pins 0.167.0 — see docs/adr/002-hugo-version-pin.md.
 
 baseURL = 'https://sternnick.github.io/nster/'
 title = 'Jane Sample — Sample Site'
@@ -10,8 +10,11 @@ defaultContentLanguage = 'en'
 enableRobotsTXT = true
 summaryLength = 0
 
-# NOTE: blowfish v3.9.0 declares hugoVersion max = 0.167.0, so the CI workflow
-# pins Hugo extended 0.167.0 (verified locally with --panicOnWarning 2026-10-19).
+# Version note (corrected 2026-10-19): 0.167.0 is simply the pin this site builds
+# green with. Blowfish v3.9.0 declares NO Hugo version constraint — theme.toml has
+# no [hugoVersion] block and config/_default/module.toml is an empty blob — so the
+# claim this file used to make, that the theme caps Hugo at 0.167.0, was wrong.
+# Hugo 0.168.0 is untested with Blowfish here, not known-bad. See docs/adr/002.
 
 [pagination]
   pagerSize = 100
@@ -56,9 +59,13 @@ summaryLength = 0
     pageRef = '/projects/'
     weight = 30
   [[menu.main]]
+    name = 'Notes'
+    pageRef = '/notes/'
+    weight = 40
+  [[menu.main]]
     name = 'About'
     pageRef = '/about/'
-    weight = 40
+    weight = 50
 
 [outputs]
   # search index for the Fuse.js modal (search.js fetches <baseURL>/index.json)
