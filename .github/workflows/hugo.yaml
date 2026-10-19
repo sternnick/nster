@@ -1,10 +1,12 @@
 name: Build and deploy
 
 env:
-  DART_SASS_VERSION: 1.105.1
-  GO_VERSION: 1.24.6
-  HUGO_VERSION: 0.168.0   # PINNED: Hugo docs pin their own; theme may require >=0.164
-  NODE_VERSION: 24.21.0
+  # HUGO 0.168.0 was planned; blowfish v3.9.0 declares hugoVersion max=0.167.0
+  # and hard-fails the build on 0.168.0 (verified 2026-10-19), so the pin is 0.167.0.
+  HUGO_VERSION: 0.167.0
+  # Chrome for Testing Stable channel at pin time (last-known-good-versions.json,
+  # re-verified 2026-10-19T15:30Z)
+  CHROME_VERSION: 155.0.8059.84
   TZ: Europe/Dublin
 
 on:
@@ -46,7 +48,32 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Build site
-        run: hugo --gc --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
+        run: hugo --gc --minify --panicOnWarning --baseURL "${{ steps.pages.outputs.base_url }}/"
+
+      - name: Install Chrome for Testing (pinned)
+        run: |
+          curl -sLo chrome.zip "https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chrome-linux64.zip"
+          unzip -q chrome.zip -d .chrome
+
+      - name: Render CV PDF from the built site
+        # Serve the build under the site's sub-path so absolute /nster/ asset
+        # URLs resolve (file:// would resolve them to filesystem root).
+        run: |
+          mkdir -p "$RUNNER_TEMP/site"
+          ln -s "$GITHUB_WORKSPACE/public" "$RUNNER_TEMP/site/nster"
+          python3 -m http.server 8099 --bind 127.0.0.1 --directory "$RUNNER_TEMP/site" &
+          SRV=$!
+          for i in $(seq 1 20); do
+            curl -fso /dev/null "http://127.0.0.1:8099/nster/cv/index.html" && break
+            sleep 0.5
+          done
+          .chrome/chrome-linux64/chrome \
+            --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage \
+            --print-to-pdf="$GITHUB_WORKSPACE/public/cv.pdf" --no-pdf-header-footer \
+            --virtual-time-budget=8000 \
+            "http://127.0.0.1:8099/nster/cv/index.html"
+          kill $SRV || true
+          test -s public/cv.pdf
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
