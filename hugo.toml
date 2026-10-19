@@ -56,9 +56,13 @@ summaryLength = 0
     pageRef = '/projects/'
     weight = 30
   [[menu.main]]
+    name = 'Notes'
+    pageRef = '/notes/'
+    weight = 40
+  [[menu.main]]
     name = 'About'
     pageRef = '/about/'
-    weight = 40
+    weight = 50
 
 [markup]
   [markup.refLinks]
