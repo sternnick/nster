@@ -29,7 +29,7 @@ summaryLength = 0
   colorScheme = 'blowfish'
   defaultAppearance = 'light'
   autoSwitchAppearance = true
-  enableSearch = false
+  enableSearch = true
 
   # sample phase: keep the placeholder site out of search engines
   robots = 'noindex, nofollow'
@@ -66,6 +66,10 @@ summaryLength = 0
     name = 'About'
     pageRef = '/about/'
     weight = 50
+
+[outputs]
+  # search index for the Fuse.js modal (search.js fetches <baseURL>/index.json)
+  home = ['html', 'rss', 'json']
 
 [markup]
   [markup.refLinks]
