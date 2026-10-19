@@ -1,0 +1,74 @@
+# Hugo site configuration — nster (sample site)
+# NOTE: this site currently contains PLACEHOLDER SAMPLE CONTENT only.
+
+baseURL = 'https://sternnick.github.io/nster/'
+
+disableKinds = ['section', 'taxonomy', 'term', 'rss', 'sitemap', '404']
+enableRobotsTXT = true
+
+title = 'Sample Resume Site'
+theme = 'hugo-theme-online-resume'
+
+defaultContentLanguage = 'en'
+[languages]
+  [languages.en]
+    [languages.en.params.font]
+      preconnect = ['https://fonts.googleapis.com']
+      crossorigin = ['https://fonts.gstatic.com']
+      stylesheets = [
+        'https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;500;600&display=swap'
+      ]
+      family = '"Noto Serif", ui-serif, Georgia, serif'
+  [languages.zh]
+    [languages.zh.params.font]
+      preconnect = ['https://fonts.googleapis.com']
+      crossorigin = ['https://fonts.gstatic.com']
+      stylesheets = [
+        'https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600&display=swap'
+      ]
+      family = '"Noto Serif SC", ui-serif, "Songti SC", STSong, SimSun, serif'
+
+[markup]
+  # Preserve math delimiters for client-side rendering.
+  [markup.goldmark.extensions.passthrough]
+    enable = true
+    [markup.goldmark.extensions.passthrough.delimiters]
+      block = [['\[', '\]'], ['$$', '$$']]
+      inline = [['\(', '\)'], ['$', '$']]
+
+[module]
+  [module.hugoVersion]
+    min = '0.164.0'
+
+[params]
+  private = false             # replace the resume with a private message
+  message = "Sorry, my resume has been hidden." # markdown shown in private mode
+  math = false                # no math rendering needed for the sample
+  themeColor = '#115E59'    # accent color
+
+  allowIndexing = false       # sample phase: keep placeholder site out of search engines
+  showThemeCredit = true      # show theme credit in the footer
+
+  [params.analytics.umami]
+    enable = false
+    script = 'https://cloud.umami.is/script.js'
+    websiteID = ''
+    hostURL = ''
+    autoTrack = ''
+    domains = ''
+    tag = ''
+    performance = ''
+    excludeSearch = ''
+    excludeHash = ''
+    doNotTrack = true
+  [params.analytics.google]
+    enable = false
+    id = ''
+    respectDoNotTrack = true
+  [params.analytics.cloudflare]
+    enable = false
+    token = ''
+  [params.features]
+    [params.features.math]
+      engine = 'katex'      # katex | mathjax
+      version = '0.18.4'    # CDN version
