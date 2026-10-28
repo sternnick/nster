@@ -1,0 +1,10 @@
+Copyright (c) 2026 Nick Sterniotis
+All rights reserved.
+
+The text, images and configuration in this repository are original works and are not licensed for reuse,
+redistribution or republication without written permission.
+
+One component is not ours and is not covered by the above. `themes/blowfish` is a git submodule pointing at
+https://github.com/nunocoracao/blowfish, published under the MIT licence. It is fetched from that repository
+by anyone who clones this one with `--recurse-submodules`, so nothing in this repository redistributes it,
+and its terms remain its own.
